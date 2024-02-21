@@ -1,0 +1,140 @@
+rutas
+import { Routes } from '@angular/router';
+
+export const routes: Routes = [
+    {
+        path: '',
+        loadComponent: ()=> import('./domains/products/pages/list/list.component')
+    },
+    {
+        path: 'about',
+        loadComponent: () => import('./domains/info/pages/about/about.component')
+    },
+    {
+        path: 'product/:id',
+        loadComponent: () => import('./domains/products/pages/product-detail/product-detail.component')
+    },
+    {
+        path: '**',
+        loadComponent: () => import('./domains/info/pages/not-found/not-found.component') 
+    }
+];
+
+////config
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes,withComponentInputBinding(),withPreloading(PreloadAllModules)),
+    provideHttpClient(),
+  ]
+};
+
+///serivece
+
+
+  private http = inject(HttpClient);
+
+
+  constructor() { }
+
+
+  getProducts(cate_id: string){
+    const url = new URL(`https://api.escuelajs.co/api/v1/products`)
+    if(cate_id){
+      url.searchParams.set('categoryId',cate_id);
+    }
+    return this.http.get<Product[]>(url.toString());
+  }
+
+  getOne(id: string){
+    return this.http.get<Product>(`https://api.escuelajs.co/api/v1/products/${id}`);
+
+  }
+///modelo
+export interface Product{
+    id: number;
+    title: string;
+    description: string;
+    price: number;
+    images: string[];
+    creationAt:string;
+    category: Category;
+}
+
+
+///recibo producto 
+@Input ({required:true}) product!: Product;
+html
+
+<div class="group rounded-lg border">
+    <a [routerLink]="['product/',product.id]"  
+    class="w-full overflow-hidden rounded-t-lg bg-gray-200">
+        <img [src]="product.images[0]" [alt]="product.title" class="h-full w-full object-cover object-center group-hover:opacity-75">
+    </a>
+    <div class="flex flex-col space-y-2 p-4">
+        <h3 class="text-sm text-gray-700">{{ product.title | uppercase }}</h3>
+        <p class="text-lg font-medium text-gray-900">{{product.price | currency: '$':'symbol': '1.0'}}</p>
+        <p class="text-sm font-medium text-gray-500">{{product.creationAt | timeAgo}}</p>
+
+        <button class="text-black bg-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 w-full"
+            (click)="addToCartHandler()">Add to cart</button>
+    </div>
+</div>
+
+imports  list.component
+CommonModule,ProductComponent,ProductComponent,HeaderComponent,RouterLinkWithHref
+ private productService = inject(ProductService);
+  ngOnChanges(changes : SimpleChanges){
+      this.getProducts();
+    
+  }
+
+
+  addToCart( product: Product){
+      this.cartService.addToCart(product);
+    }
+    
+  private getProducts(){
+      this.productService.getProducts(this.cate_id).subscribe({
+        next: (products)=>{
+          this.products.set(products);
+        },
+        error: ()=>{}
+      })
+  }
+
+html
+<div class="grid grid-cols-4 gap-8 w-full" >
+        @for(product of products();track product){
+    <app-product
+        [product]="product"
+        (addToCart)="addToCart($event)"
+    ></app-product>
+        }   
+    </div>
+
+
+detalles
+
+  ngOnInit(){
+    if(this.id){
+      this.productService.getOne(this.id).subscribe({
+        next: (product) =>{
+          this.product.set(product);
+          if(product.images.length >0){
+            this.cover.set(product.images[0]);
+          }
+        }
+      })
+    }
+  }
+
+  changeCover(newImg: string){
+    this.cover.set(newImg);
+  }
+
+  addToCart(){
+    const product = this.product();
+    if(product){
+      this.cartService.addToCart(product);
+    }
+  }
