@@ -1,0 +1,30 @@
+    <table class="w-full">
+        <thead>
+            <tr class="bg-rose-200">
+                <th class="">Nombre</th>
+                <th >Apellido</th>
+                <th class=" py-2">DNI</th>
+                <th >Ciudad</th>
+                <th >Eliminar</th>
+                <th >Detalles</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for( per of personas();track per){
+
+                <tr  class="bg-rose-100"  > 
+                    <th class="py-2"> {{per.name}}</th>
+                    <th class="py-2">{{per.lastname}}</th>
+                    <th class="py-2">{{per.dni}}</th>
+                    <th class="py-2">{{per.city}}</th>
+                    <th class="py-2 text-center">
+                        <button  (click)="delete(per.id!)"  class="text-red-600 hover:text-red-800">      Eliminar      </button>
+                    </th>
+                    <th class="py-2 text-center">
+                                <a class="text-blue-600 hover:text-blue-800" [routerLink]="['person/',per.id]" >Detalles</a>            
+                    </th>
+                
+                
+            }
+        </tbody>
+    </table>
